@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Day for Aashu!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Pacifico&family=Poppins:wght@400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles to complement Tailwind */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #fff8f9, #fde2e4, #fbd1d7, #f7c5cc);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow: hidden; /* Hide scrollbars for the intro */
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .font-playfair { font-family: 'Playfair Display', serif; }
+        .font-pacifico { font-family: 'Pacifico', cursive; }
+        .font-dancing { font-family: 'Dancing Script', cursive; }
+
+        /* --- Intro Scratch-off Styles --- */
+        #scratch-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 200;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 16 16, auto;
+        }
+        #scratch-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transition: opacity 0.5s ease-out;
+        }
+        .intro-content {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #E11D48;
+            background-color: #FFD1DC;
+        }
+        #reveal-heart {
+            font-size: 5rem;
+            cursor: pointer;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        #reveal-heart.visible {
+            opacity: 1;
+            transform: scale(1);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(0.95); }
+        }
+
+        /* --- Main Content Styles --- */
+        #main-content {
+            display: none; /* Hidden initially */
+            overflow-y: auto;
+            height: 100vh;
+            position: relative;
+            z-index: 10;
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        
+        .plane {
+            position: absolute;
+            top: -12px; left: -20px;
+            font-size: 24px;
+            transition: left 2.5s cubic-bezier(0.42, 0, 0.58, 1);
+        }
+        .plane.fly {
+            left: calc(100% - 10px);
+        }
+
+        /* --- Animated Background Elements --- */
+        #animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1; 
+        }
+        .floating-element {
+            position: absolute;
+            bottom: -150px; /* Start below the screen */
+            user-select: none;
+            animation: float-up linear infinite;
+        }
+        .floating-element.balloon {
+            width: 70px;
+            height: 90px;
+            background-color: rgba(244, 114, 182, 0.8);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        }
+        .floating-element.balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.5);
+        }
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0);
+            }
+            100% {
+                transform: translateY(-120vh) translateX(100px) rotate(15deg);
+            }
+        }
+
+        /* --- Bouquet Styles --- */
+        #bouquet-image-container {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        #bouquet-image-container.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #bouquet-button {
+            transition: all 0.3s ease;
+        }
+        #bouquet-button:hover {
+            transform: scale(1.1);
+        }
+
+        /* --- Quiz Styles --- */
+        .quiz-option {
+            transition: all 0.2s ease-in-out;
+        }
+        .quiz-option:hover {
+            transform: scale(1.05);
+            background-color: #fecdd3; /* Light pink hover */
+        }
+        .quiz-option.correct {
+            background-color: #86efac !important; /* Green */
+            color: #14532d;
+            border-color: #22c55e;
+        }
+        .quiz-option.incorrect {
+            background-color: #fca5a5 !important; /* Red */
+            color: #7f1d1d;
+            border-color: #ef4444;
+        }
+        .quiz-option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        #quiz-warning-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Container for all floating animations -->
+    <div id="animation-container"></div>
+
+    <!-- Scratch-off Intro Section -->
+    <div id="scratch-container">
+        <div class="intro-content">
+            <h1 class="font-playfair text-3xl md:text-5xl mb-4">Something special is hiding...</h1>
+            <p class="text-lg">Scratch to reveal!</p>
+            <div id="reveal-heart" class="mt-8">❤️</div>
+        </div>
+        <canvas id="scratch-canvas"></canvas>
+    </div>
+
+    <!-- Main Website Content -->
+    <div id="main-content">
+        <!-- Header Section -->
+        <header class="text-center py-16 px-4 reveal">
+            <h1 class="font-playfair text-4xl md:text-6xl text-rose-500">For my Dearest, Aashika Kharel (Aashu), My Princess 👑</h1>
+            <p class="mt-4 text-lg text-gray-600">Happy National Girlfriend's Day! (August 1st)</p>
+            
+            <!-- Bouquet Section -->
+            <div class="mt-8">
+                <button id="bouquet-button" class="bg-rose-500 text-white font-bold py-3 px-8 rounded-full shadow-lg">Click Me!</button>
+                <div id="bouquet-loader" class="hidden my-4">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-rose-500 mx-auto"></div>
+                    <p class="text-gray-600 mt-2">Preparing your surprise...</p>
+                </div>
+                <div id="bouquet-image-container" class="mt-6">
+                    <img id="bouquet-image" src="Bouquet.jpg" alt="A beautiful bouquet for you" class="w-64 h-auto mx-auto rounded-lg shadow-lg">
+                    <p id="bouquet-text" class="font-dancing text-2xl text-pink-600 mt-4"></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-4xl mx-auto px-6 space-y-20 md:space-y-32 pb-20">
+            <!-- Our Connection Section -->
+            <section class="reveal">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">374km Is Just a Number 😉</h2>
+                <div class="bg-white/70 rounded-xl shadow-lg p-8 flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0">
+                    <div class="text-center">
+                        <p class="font-semibold text-lg">You 👸</p>
+                        <p class="text-gray-600">Biratnagar</p>
+                    </div>
+                    <div class="w-full md:w-1/2 border-b-2 border-dashed border-rose-300 relative my-4 md:my-0">
+                         <div id="plane" class="plane">✈️</div>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-semibold text-lg">Me 😎</p>
+                        <p class="text-gray-600">Bhaktapur</p>
+                    </div>
+                </div>
+                <p class="text-center mt-6 text-gray-700">Even though we're miles apart, you're always right here in my heart.</p>
+            </section>
+
+            <!-- A Message From Me Section -->
+            <section class="reveal">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">A Message From My Heart</h2>
+                <div class="bg-white/70 rounded-xl shadow-lg p-8 text-center">
+                    <p class="font-dancing text-xl leading-relaxed text-gray-800">
+                        "My dearest Aashu,
+                        <br><br>
+                        On this Girlfriend's Day, I wanted to code something a little different to show you how much you mean to me. Every day I feel so lucky to have you in my life. Your smile brightens my world, and your laughter is my favorite sound. Even with all the kilometers between us, my love for you only grows stronger. I am counting down the moments until we can close this distance for good.
+                        <br><br>
+                        With all my love,
+                        <br>
+                        Abhisek Timsina"
+                    </p>
+                </div>
+            </section>
+            
+            <!-- Reasons I Love You Section -->
+            <section class="reveal text-center">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">100 Reasons Why I Love You... Here are a few!</h2>
+                <div class="bg-white/70 rounded-xl shadow-lg p-8 min-h-[150px] flex items-center justify-center">
+                    <p id="love-reason" class="font-pacifico text-2xl md:text-3xl text-gray-700">You have the cutest smile!</p>
+                </div>
+                <button id="new-reason-btn" class="mt-6 bg-rose-500 text-white font-bold py-3 px-6 rounded-full hover:bg-rose-600 transition-colors duration-300 shadow-lg transform hover:scale-105">
+                    Gimme Another Reason!
+                </button>
+            </section>
+
+            <!-- Quiz Section -->
+            <section class="reveal text-center">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">Our Special Moments Quiz!</h2>
+                <div id="quiz-container" class="bg-white/70 rounded-xl shadow-lg p-8 max-w-2xl mx-auto">
+                    <div id="quiz-content">
+                        <p id="quiz-level" class="font-pacifico text-2xl text-rose-400 mb-2"></p>
+                        <p id="quiz-question" class="text-xl font-semibold text-gray-800 mb-6"></p>
+                        <div id="quiz-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Options will be inserted here by JS -->
+                        </div>
+                    </div>
+                    <div id="quiz-result" class="hidden">
+                        <h3 id="quiz-result-title" class="font-pacifico text-3xl text-rose-500 mb-4"></h3>
+                        <p class="text-lg text-gray-700">You scored <span id="quiz-score" class="font-bold"></span> out of <span id="quiz-total-score" class="font-bold"></span>!</p>
+                        <p class="mt-4 text-gray-600">But no matter the score, you've already won my heart completely. ❤️</p>
+                        <button id="restart-quiz-btn" class="mt-6 bg-rose-500 text-white font-bold py-2 px-5 rounded-full hover:bg-rose-600 transition-colors duration-300 shadow-lg">Play Again?</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Photo Gallery Section -->
+            <section class="reveal">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">Our Cherished Moments 📸</h2>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image1.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image2.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image3.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image4.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image5.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden transform hover:scale-105 hover:shadow-xl transition-all duration-300"><img src="image6.jpeg" alt="A photo of us" class="w-full h-full object-cover"></div>
+                </div>
+            </section>
+
+            <!-- Our Song Section -->
+            <section class="reveal text-center">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-8">🎶 A Special Something For You 🎶</h2>
+                <div class="bg-white/70 rounded-xl shadow-lg p-4 md:p-8">
+                    <video controls class="w-full rounded-lg">
+                        <source src="media.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </section>
+
+            <!-- A Promise Section -->
+            <section class="text-center reveal">
+                <h2 class="font-dancing text-4xl md:text-5xl text-center text-rose-500 mb-4">My Promise to You</h2>
+                <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+                    I promise to always be there for you, to make you laugh (even with my bad jokes), and to love you more each day. The distance is just temporary. Our future together is my biggest dream. 💖
+                </p>
+            </section>
+        </main>
+
+        <footer class="text-center py-8">
+            <p class="text-gray-500">Made with ❤️ for the one and only Aashika.</p>
+        </footer>
+    </div>
+    
+    <!-- Quiz Warning Modal -->
+    <div id="quiz-warning-modal" class="hidden flex"> <!-- FIX: Add flex here, control with hidden -->
+        <div class="bg-white rounded-xl shadow-2xl p-8 text-center max-w-sm mx-4">
+            <h3 class="font-pacifico text-3xl text-rose-500 mb-4">Heads up!</h3>
+            <p class="text-lg text-gray-700">The next questions are a bit tricky, but they're worth 3 points each! Good luck! 😉</p>
+            <button id="start-hard-quiz-btn" class="mt-6 bg-rose-500 text-white font-bold py-2 px-5 rounded-full hover:bg-rose-600 transition-colors duration-300 shadow-lg">Let's Do It!</button>
+        </div>
+    </div>
+
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Scratch-off Logic ---
+        const scratchContainer = document.getElementById('scratch-container');
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        const heart = document.getElementById('reveal-heart');
+        const mainContent = document.getElementById('main-content');
+
+        let isScratching = false;
+        let isRevealed = false;
+
+        function setupCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.fillStyle = '#E11D48';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'destination-out';
+        }
+
+        function scratch(x, y) {
+            if (!isRevealed) {
+                ctx.beginPath();
+                ctx.arc(x, y, 40, 0, Math.PI * 2, true);
+                ctx.fill();
+            }
+        }
+
+        function checkScratchAmount() {
+            if (isRevealed) return;
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            let transparentPixels = 0;
+            for (let i = 3; i < data.length; i += 4) {
+                if (data[i] === 0) transparentPixels++;
+            }
+            const percentage = (transparentPixels / (canvas.width * canvas.height)) * 100;
+            if (percentage > 40) {
+                isRevealed = true;
+                canvas.style.opacity = '0';
+                canvas.style.pointerEvents = 'none';
+                setTimeout(() => heart.classList.add('visible'), 500);
+            }
+        }
+
+        canvas.addEventListener('mousedown', () => isScratching = true);
+        canvas.addEventListener('mouseup', () => { isScratching = false; checkScratchAmount(); });
+        canvas.addEventListener('mousemove', (e) => { if (isScratching) scratch(e.clientX, e.clientY); });
+        canvas.addEventListener('touchstart', (e) => { isScratching = true; e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', () => { isScratching = false; checkScratchAmount(); });
+        canvas.addEventListener('touchmove', (e) => { if (isScratching) { const touch = e.touches[0]; scratch(touch.clientX, touch.clientY); } e.preventDefault(); }, { passive: false });
+
+        heart.addEventListener('click', () => {
+            scratchContainer.style.transition = 'opacity 1s';
+            scratchContainer.style.opacity = '0';
+            setTimeout(() => {
+                scratchContainer.style.display = 'none';
+                mainContent.style.display = 'block';
+                document.body.style.overflow = 'auto';
+                initializeMainContentAnimations();
+            }, 1000);
+        });
+        
+        setupCanvas();
+        window.addEventListener('resize', setupCanvas);
+
+        // --- Main Content Logic ---
+        function initializeMainContentAnimations() {
+            // Create Animated Background Elements
+            const animationContainer = document.getElementById('animation-container');
+            const elements = ['❤️', '✨', '💖', '⭐', '💕'];
+            const balloonColors = ['rgba(244, 114, 182, 0.8)', 'rgba(225, 29, 72, 0.8)', 'rgba(251, 146, 60, 0.8)'];
+            const elementCount = 25;
+
+            for (let i = 0; i < elementCount; i++) {
+                const el = document.createElement('div');
+                el.classList.add('floating-element');
+                
+                if (Math.random() < 0.33) {
+                    el.classList.add('balloon');
+                    el.style.backgroundColor = balloonColors[Math.floor(Math.random() * balloonColors.length)];
+                } else {
+                    el.textContent = elements[Math.floor(Math.random() * elements.length)];
+                    el.style.fontSize = `${Math.random() * 15 + 15}px`;
+                }
+                
+                el.style.left = `${Math.random() * 100}%`;
+                el.style.animationDuration = `${Math.random() * 12 + 8}s`;
+                el.style.animationDelay = `${Math.random() * 8}s`;
+                el.style.opacity = Math.random() * 0.6 + 0.3;
+                animationContainer.appendChild(el);
+            }
+
+            // Bouquet button logic
+            const bouquetBtn = document.getElementById('bouquet-button');
+            const bouquetLoader = document.getElementById('bouquet-loader');
+            const bouquetContainer = document.getElementById('bouquet-image-container');
+            const bouquetText = document.getElementById('bouquet-text');
+            bouquetContainer.style.display = 'none'; // Hide initially
+            bouquetBtn.addEventListener('click', () => {
+                bouquetBtn.style.display = 'none';
+                bouquetLoader.style.display = 'block';
+                
+                const duration = 2 * 1000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 } });
+                    confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 } });
+                    if (Date.now() < end) { requestAnimationFrame(frame); }
+                }());
+
+                setTimeout(() => {
+                    bouquetLoader.style.display = 'none';
+                    bouquetContainer.style.display = 'block';
+                    bouquetContainer.classList.add('visible');
+                    bouquetText.textContent = "Tadaa! Your bouquet is ready, my love! 💐";
+                }, 2000);
+            });
+
+            // Fade-in on scroll
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        if(entry.target.contains(document.getElementById('plane'))) {
+                            document.getElementById('plane').classList.add('fly');
+                        }
+                    }
+                });
+            }, { threshold: 0.1 });
+            reveals.forEach(reveal => observer.observe(reveal));
+
+            // "Reasons I Love You" button
+            const reasons = [
+                "You have the cutest smile!",
+                "You know how to dance better than anyone.",
+                "You're a great singer, even if you don't think so!",
+                "You make the best food in my imagination.",
+                "I love how you're so good at sharing.",
+                "I love the adorable childish behaviour in you the most.",
+                "You always know how to make me smile.",
+                "You're my biggest supporter.",
+                "Because you'd actually scroll through a website I made for you.",
+                "You're my favorite person to do nothing with.",
+                "Your laugh is contagious!"
+            ];
+            const reasonEl = document.getElementById('love-reason');
+            const reasonBtn = document.getElementById('new-reason-btn');
+            reasonEl.textContent = reasons[0];
+            reasonBtn.addEventListener('click', () => {
+                let newReason = reasons[Math.floor(Math.random() * reasons.length)];
+                while(reasonEl.textContent === newReason) {
+                    newReason = reasons[Math.floor(Math.random() * reasons.length)];
+                }
+                reasonEl.textContent = newReason;
+            });
+
+            // --- Quiz Logic ---
+            const quizContent = document.getElementById('quiz-content');
+            const quizResult = document.getElementById('quiz-result');
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizOptionsEl = document.getElementById('quiz-options');
+            const quizScoreEl = document.getElementById('quiz-score');
+            const quizTotalScoreEl = document.getElementById('quiz-total-score');
+            const quizResultTitleEl = document.getElementById('quiz-result-title');
+            const restartQuizBtn = document.getElementById('restart-quiz-btn');
+            const quizLevelEl = document.getElementById('quiz-level');
+            const quizWarningModal = document.getElementById('quiz-warning-modal');
+            const startHardQuizBtn = document.getElementById('start-hard-quiz-btn');
+
+            const quizData = {
+                easy: [
+                    { question: "Where did we first meet?", options: ["College", "At a cafe", "Through Friends", "Online"], answer: "Online", points: 1 },
+                    { question: "What's my favourite dish?", options: ["Momo", "Biryani", "Keema Noodles", "Pizza"], answer: "Keema Noodles", points: 1 },
+                    { question: "Where did we have our first kiss?", options: ["Dhankuta", "Dharan", "Bhedetar", "Biratnagar"], answer: "Dhankuta", points: 1 },
+                    { question: "How long have we been in our relationship?", options: ["Six Months", "Seven Months", "Eight Months", "Nine Months"], answer: "Eight Months", points: 1 },
+                    { question: "What's our anniversary date?", options: ["28th", "29th", "30th", "31st"], answer: "29th", points: 1 },
+                    { question: "What did I give you first?", options: ["A teddy", "Clothing Item", "Cosmetics", "Jewelry item"], answer: "Clothing Item", points: 1 }
+                ],
+                hard: [
+                    { question: "Where were we when the earthquake came?", options: ["In Bhedetar", "In Ilam Bazar", "In Biratnagar", "In Kanyam"], answer: "In Ilam Bazar", points: 3 },
+                    { question: "When did we actually meet in real life?", options: ["30th Jan", "31st Jan", "2nd Feb", "3rd Feb"], answer: "31st Jan", points: 3 },
+                    { question: "How late did I arrive for our first meeting?", options: ["2 PM", "3 PM", "4 PM", "5 PM"], answer: "5 PM", points: 3 },
+                    { question: "What drink did we have on our first date?", options: ["Vodka", "Whisky", "Beer", "Rum"], answer: "Vodka", points: 3 }
+                ]
+            };
+
+            let currentSection = 'easy';
+            let currentQuestionIndex = 0;
+            let score = 0;
+            const totalPoints = quizData.easy.reduce((sum, q) => sum + q.points, 0) + quizData.hard.reduce((sum, q) => sum + q.points, 0);
+            const passMark = Math.ceil(totalPoints / 2); // Pass if score is more than 50%
+
+            function startQuiz() {
+                currentSection = 'easy';
+                currentQuestionIndex = 0;
+                score = 0;
+                quizContent.style.display = 'block';
+                quizResult.classList.add('hidden');
+                quizWarningModal.classList.add('hidden'); // FIX: Ensure modal is hidden at the start
+                showQuestion();
+            }
+
+            function showQuestion() {
+                quizLevelEl.textContent = `${currentSection.charAt(0).toUpperCase() + currentSection.slice(1)} Questions!`;
+                const currentQuestion = quizData[currentSection][currentQuestionIndex];
+                quizQuestionEl.textContent = `(${currentQuestion.points} point${currentQuestion.points > 1 ? 's' : ''}) ${currentQuestion.question}`;
+                quizOptionsEl.innerHTML = '';
+                currentQuestion.options.forEach(optionText => {
+                    const button = document.createElement('button');
+                    button.textContent = optionText;
+                    button.className = 'quiz-option w-full bg-white/80 border border-rose-200 rounded-lg p-3 font-semibold text-gray-700';
+                    button.addEventListener('click', () => selectAnswer(button, optionText, currentQuestion.answer, currentQuestion.points));
+                    quizOptionsEl.appendChild(button);
+                });
+            }
+
+            function selectAnswer(button, selectedOption, correctAnswer, points) {
+                const allOptions = quizOptionsEl.querySelectorAll('button');
+                allOptions.forEach(btn => btn.classList.add('disabled'));
+
+                if (selectedOption === correctAnswer) {
+                    button.classList.add('correct');
+                    score += points;
+                    confetti({ particleCount: 50, spread: 70, origin: { y: 0.6 } });
+                } else {
+                    button.classList.add('incorrect');
+                    allOptions.forEach(btn => {
+                        if (btn.textContent === correctAnswer) {
+                            btn.classList.add('correct');
+                        }
+                    });
+                }
+
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentSection === 'easy' && currentQuestionIndex >= quizData.easy.length) {
+                        quizWarningModal.classList.remove('hidden'); // FIX: Show modal
+                    } else if (currentSection === 'hard' && currentQuestionIndex >= quizData.hard.length) {
+                        showResult();
+                    }
+                    else {
+                        showQuestion();
+                    }
+                }, 1500);
+            }
+
+            startHardQuizBtn.addEventListener('click', () => {
+                quizWarningModal.classList.add('hidden'); // FIX: Hide modal
+                currentSection = 'hard';
+                currentQuestionIndex = 0;
+                showQuestion();
+            });
+
+            function showResult() {
+                quizContent.style.display = 'none';
+                quizResult.classList.remove('hidden');
+                quizScoreEl.textContent = score;
+                quizTotalScoreEl.textContent = totalPoints;
+                if (score >= passMark) {
+                    quizResultTitleEl.textContent = "Wow, you passed!";
+                } else {
+                    quizResultTitleEl.textContent = "Nice try, my love!";
+                }
+            }
+
+            restartQuizBtn.addEventListener('click', startQuiz);
+            startQuiz();
+        }
+    });
+    </script>
+</body>
+</html>
